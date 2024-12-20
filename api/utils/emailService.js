@@ -28,7 +28,7 @@ export const sendVerificationCode=async(email, verificationCode)=>{
 
 export const sendUpdateMail = async (email, listing) => {
     try {
-        const propertyLink = `https://woodland-escape.onrender.com/listing${listing._id}`;
+        const propertyLink = `https://woodland-escape.onrender.com/listing/${listing._id}`;
         console.log(email, "update m bhejne ke liye jo mail aayi h ");
       const emailContent = savedPropertyUpdateTemplate.replace('{{listingName}}', listing.name).replace('{{propertyLink}}', propertyLink);;
   
