@@ -2,45 +2,59 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import SwiperCore from 'swiper';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css/bundle';
 import {
   FaBath,
   FaBed,
   FaChair,
-  FaMapMarkedAlt,
   FaMapMarkerAlt,
   FaParking,
   FaShare,
+  FaHeart,
+  FaRegHeart,
 } from 'react-icons/fa';
 import Contact from '../components/Contact';
-// import Contact from '../components/Contact';
-
-// https://sabe.io/blog/javascript-format-numbers-commas#:~:text=The%20best%20way%20to%20format,format%20the%20number%20with%20commas.
+import { addSavedHomeAsync, removeSavedHomeAsync } from '../redux/savedHomes/savedHomesSlice';
 
 export default function Listing() {
   SwiperCore.use([Navigation]);
+  const userdata = useSelector((state) => state.user.currentUser);
+  const dispatch = useDispatch();
+  const params = useParams();
+
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
   const [contact, setContact] = useState(false);
-  const params = useParams();
-  const { currentUser } = useSelector((state) => state.user);
+  const [saved, setSaved] = useState(false);
 
+  const { currentUser } = useSelector((state) => state.user);
+  const { savedHomes } = useSelector((state) => state.savedHomes);
+
+  // Fetch listing data and initialize saved state
   useEffect(() => {
     const fetchListing = async () => {
       try {
         setLoading(true);
         const res = await fetch(`/api/listing/get/${params.listingId}`);
         const data = await res.json();
+        
         if (data.success === false) {
           setError(true);
           setLoading(false);
           return;
         }
+
         setListing(data);
+        
+        // Check if the current user has saved this listing
+        if (userdata && data.savedBy && data.savedBy.includes(userdata._id)) {
+          setSaved(true);
+        }
+
         setLoading(false);
         setError(false);
       } catch (error) {
@@ -49,7 +63,22 @@ export default function Listing() {
       }
     };
     fetchListing();
-  }, [params.listingId]);
+  }, [ userdata]);
+
+  const handleSaveToggle = async () => {
+    if (!userdata) return; // Guard clause for unauthenticated users
+
+    try {
+      if (saved) {
+        await dispatch(removeSavedHomeAsync(params.listingId, userdata._id));
+      } else {
+        await dispatch(addSavedHomeAsync(params.listingId, userdata._id));
+      }
+      setSaved(!saved);
+    } catch (error) {
+      console.error('Error toggling saved state:', error);
+    }
+  };
 
   return (
     <main>
@@ -90,14 +119,26 @@ export default function Listing() {
             </p>
           )}
           <div className='flex flex-col max-w-4xl mx-auto p-3 my-7 gap-4'>
-            <p className='text-2xl font-semibold'>
-              {listing.name} - ${' '}
-              {listing.offer
-                ? listing.discountPrice.toLocaleString('en-US')
-                : listing.regularPrice.toLocaleString('en-US')}
-              {listing.type === 'rent' && ' / month'}
-            </p>
-            <p className='flex items-center mt-6 gap-2 text-slate-600  text-sm'>
+            <div className="flex justify-between items-center">
+              <p className='text-2xl font-semibold'>
+                {listing.name} - ${' '}
+                {listing.offer
+                  ? listing.discountPrice.toLocaleString('en-US')
+                  : listing.regularPrice.toLocaleString('en-US')}
+                {listing.type === 'rent' && ' / month'}
+              </p>
+              {/* Heart button for saving/removing home */}
+              <button
+                onClick={handleSaveToggle}
+                className='bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 p-3 flex items-center justify-center'>
+                {saved ? (
+                  <FaHeart className='text-white' size={24} />  // Filled heart for saved
+                ) : (
+                  <FaRegHeart className='text-white' size={24} />  // Empty heart for not saved
+                )}
+              </button>
+            </div>
+            <p className='flex items-center mt-6 gap-2 text-slate-600 text-sm'>
               <FaMapMarkerAlt className='text-green-700' />
               {listing.address}
             </p>
@@ -151,4 +192,4 @@ export default function Listing() {
       )}
     </main>
   );
-}  
+}
