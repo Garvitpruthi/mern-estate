@@ -24,7 +24,7 @@ export const deletePropertyNotificationTemplate = `<!DOCTYPE html>
           This means the property is no longer available. We understand this might be disappointing, but don’t worry—there are plenty of other amazing options waiting for you!
         </p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="http://localhost:5173/search" style="display: inline-block; background-color: #354259; color: #ffffff; font-size: 18px; padding: 12px 24px; border-radius: 5px; text-decoration: none;">
+          <a href="https://woodland-escape.onrender.com/search" style="display: inline-block; background-color: #354259; color: #ffffff; font-size: 18px; padding: 12px 24px; border-radius: 5px; text-decoration: none;">
             Explore More Properties
           </a>
         </div>
